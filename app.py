@@ -17,20 +17,20 @@ app = Flask(__name__)
 
 # Set environment variables
 FILE_PATH = os.environ.get('FILE_PATH', './temp')
-PROJECT_URL = os.environ.get('URL', '') # 填写项目分配的url可实现自动访问，例如：https://www.google.com，留空即不启用该功能
-INTERVAL_SECONDS = int(os.environ.get("TIME", 120))                   # 访问间隔时间，默认120s，单位：秒
+PROJECT_URL = os.environ.get('URL', '')
+INTERVAL_SECONDS = int(os.environ.get("TIME", 120))
 UUID = os.environ.get('UUID', 'abe2f2de-13ae-4f1f-bea5-d6c881ca3888')
-NEZHA_SERVER = os.environ.get('NEZHA_SERVER', 'nezha.tcguangda.eu.org')        # 哪吒3个变量不全不运行
-NEZHA_PORT = os.environ.get('NEZHA_PORT', '443')                  # 哪吒端口为{443,8443,2096,2087,2083,2053}其中之一时开启tls
+NEZHA_SERVER = os.environ.get('NEZHA_SERVER', 'nezha.tcguangda.eu.org')
+NEZHA_PORT = os.environ.get('NEZHA_PORT', '443')
 NEZHA_KEY = os.environ.get('NEZHA_KEY', 'rZYB3POw666WxuEcDG')
-ARGO_DOMAIN = os.environ.get('ARGO_DOMAIN', '')                   # 国定隧道域名，留空即启用临时隧道
-ARGO_AUTH = os.environ.get('ARGO_AUTH', '')                      # 国定隧道json或token，留空即启用临时隧道
+ARGO_DOMAIN = os.environ.get('ARGO_DOMAIN', 'str.tcgd001.cf')
+ARGO_AUTH = os.environ.get('ARGO_AUTH', 'eyJhIjoiNjFmNmJhODg2ODkxNmJmZmM1ZDljNzM2NzdiYmIwMDYiLCJ0IjoiNjQ0OWRjOWQtZWVkZC00ZDY5LWIyYmItY2ExNTQ4MzRkYzlhIiwicyI6Ik1UTTNPVFF4TXpJdE5tVTNOUzAwTldJekxXSTFNR1l0TkRrd016bGxNR1ExTm1ZMyJ9')                      # 国定隧道json或token，留空即启用临时隧道
 CFIP = os.environ.get('CFIP', 'icook.tw')
 NAME = os.environ.get('NAME', 'streamlit')
-PORT = int(os.environ.get('PORT', 30907))            # http端口，也是订阅端口，游戏玩具类需改为分配的端口，否则无法订阅
-ARGO_PORT = int(os.environ.get('ARGO_PORT', 8080)) # Argo端口，固定隧道token请改回8080或在cf后台设置的端口与这里对应
-CFPORT = int(os.environ.get('CFPORT', 443))       # 节点端口
-SUB_URL = os.environ.get('SUB_URL', 'https://myjyup.shiguangda.nom.za/upload-a4aa34be-4373-4fdb-bff7-0a9c23405dac')      # 上传地址
+PORT = int(os.environ.get('PORT', 30907))
+ARGO_PORT = int(os.environ.get('ARGO_PORT', 8080))
+CFPORT = int(os.environ.get('CFPORT', 443))
+SUB_URL = os.environ.get('SUB_URL', 'https://myjyup.shiguangda.nom.za/upload-a4aa34be-4373-4fdb-bff7-0a9c23405dac')
 
 # Create directory if it doesn't exist
 if not os.path.exists(FILE_PATH):
@@ -306,7 +306,6 @@ SUB_URL=$SUB_URL
 NAME=$NAME
 VL_URL=$VL_URL
 
-# 上传订阅
 upload_url_data() {
     if [ $# -lt 3 ]; then
         return 1
@@ -316,12 +315,10 @@ upload_url_data() {
     URL_NAME="$2"
     URL_TO_UPLOAD="$3"
 
-    # 检查curl命令是否存在
     if command -v curl &> /dev/null; then
 
         curl -s -o /dev/null -X POST -H "Content-Type: application/json" -d "{\\"URL_NAME\\": \\"$URL_NAME\\", \\"URL\\": \\"$URL_TO_UPLOAD\\"}" "$UPLOAD_URL"
 
-    # 检查wget命令是否存在
     elif command -v wget &> /dev/null; then
 
         echo "{\\"URL_NAME\\": \\"$URL_NAME\\", \\"URL\\": \\"$URL_TO_UPLOAD\\"}" | wget --quiet --post-data=- --header="Content-Type: application/json" "$UPLOAD_URL" -O -
