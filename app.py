@@ -40,7 +40,7 @@ else:
     print(f"{FILE_PATH} already exists")
 
 # Clean old files
-paths_to_delete = ['up.sh', 'boot.log', 'list.txt','sub.txt', 'npm', 'web', 'bot', 'tunnel.yml', 'tunnel.json']
+paths_to_delete = ['boot.log', 'list.txt','sub.txt', 'npm', 'web', 'bot', 'tunnel.yml', 'tunnel.json', 'up.sh', 'config.json']
 for file in paths_to_delete:
     file_path = os.path.join(FILE_PATH, file)
     try:
@@ -48,6 +48,39 @@ for file in paths_to_delete:
         print(f"{file_path} has been deleted")
     except Exception as e:
         print(f"Skip Delete {file_path}")
+
+# http server
+class MyHandler(http.server.SimpleHTTPRequestHandler):
+
+    def log_message(self, format, *args):
+        pass
+
+    def do_GET(self):
+        if self.path == '/':
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'Hello, world')
+        elif self.path == '/sub':
+            try:
+                with open(os.path.join(FILE_PATH, 'sub.txt'), 'rb') as file:
+                    content = file.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/plain; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content)
+            except FileNotFoundError:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(b'Error reading file')
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b'Not found')
+
+httpd = socketserver.TCPServer(('', PORT), MyHandler)
+server_thread = threading.Thread(target=httpd.serve_forever)
+server_thread.daemon = True
+server_thread.start()
 
 # Generate xr-ay config file
 def generate_config():
@@ -60,7 +93,10 @@ generate_config()
 # Determine system architecture
 def get_system_architecture():
     arch = os.uname().machine
-    return 'arm' if 'arm' in arch else 'amd'
+    if 'arm' in arch or 'aarch64' in arch or 'arm64' in arch:
+        return 'arm'
+    else:
+        return 'amd'
 
 # Download file
 def download_file(file_name, file_url):
@@ -105,7 +141,7 @@ def download_files_and_run():
         print('NEZHA variable is empty, skip running')
 
     # Run xr-ay
-    command1 = f"nohup {FILE_PATH}/web -c {FILE_PATH}/config.json >/dev/null 2>&1 &"
+    command1 = f"{FILE_PATH}/web -c {FILE_PATH}/config.json >/dev/null"
     try:
         subprocess.run(command1, shell=True, check=True)
         print('web is running')
@@ -119,14 +155,13 @@ def download_files_and_run():
         args = get_cloud_flare_args()
         # print(args)
         try:
-            subprocess.run(f"nohup {FILE_PATH}/bot {args} >/dev/null 2>&1 &", shell=True, check=True)
+            subprocess.run(f"nohup {FILE_PATH}/bot {args} >/dev/null", shell=True, check=True)
             print('bot is running')
             subprocess.run('sleep 2', shell=True)  # Wait for 2 seconds
         except subprocess.CalledProcessError as e:
             print(f'Error executing command: {e}')
 
     subprocess.run('sleep 3', shell=True)  # Wait for 3 seconds
-
 
 def get_cloud_flare_args():
 
@@ -156,13 +191,13 @@ def get_files_for_architecture(architecture):
     if architecture == 'arm':
         return [
             {'file_name': 'npm', 'file_url': 'https://raw.githubusercontent.com/kahunama/myfile/main/nezha/nezha-agent(arm)'},
-            {'file_name': 'web', 'file_url': 'https://raw.githubusercontent.com/mytcgd/myfiles/main/my/xray(arm64)'},
+            {'file_name': 'web', 'file_url': 'https://github.com/mytcgd/myfiles/releases/download/main/xray_arm'},
             {'file_name': 'bot', 'file_url': 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64'},
         ]
     elif architecture == 'amd':
         return [
             {'file_name': 'npm', 'file_url': 'https://raw.githubusercontent.com/kahunama/myfile/main/nezha/nezha-agent'},
-            {'file_name': 'web', 'file_url': 'https://raw.githubusercontent.com/mytcgd/myfiles/main/my/xray'},
+            {'file_name': 'web', 'file_url': 'https://github.com/mytcgd/myfiles/releases/download/main/xray'},
             {'file_name': 'bot', 'file_url': 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64'},
         ]
     return []
@@ -246,6 +281,7 @@ def extract_domains():
 
 
 # Generate list and sub info
+VL_URL = ''
 def generate_links(argo_domain):
     meta_info = subprocess.run(['curl', '-s', 'https://speed.cloudflare.com/meta'], capture_output=True, text=True)
     meta_info = meta_info.stdout.split('"')
@@ -255,11 +291,11 @@ def generate_links(argo_domain):
     VMESS = {"v": "2", "ps": f"{NAME}-{ISP}", "add": CFIP, "port": CFPORT, "id": UUID, "aid": "0", "scy": "none", "net": "ws", "type": "none", "host": argo_domain, "path": "/vmess?ed=2048", "tls": "tls", "sni": argo_domain, "alpn": ""}
 
     list_txt = f"""
-vless://{UUID}@{CFIP}:{CFPORT}?encryption=none&security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Fvless?ed=2048#{NAME}-{ISP}
+vless://{UUID}@{CFIP}:{CFPORT}?encryption=none&security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Fvless%3Fed%3D2048#{NAME}-{ISP}
 
 vmess://{ base64.b64encode(json.dumps(VMESS).encode('utf-8')).decode('utf-8')}
 
-trojan://{UUID}@{CFIP}:{CFPORT}?security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Ftrojan?ed=2048#{NAME}-{ISP}
+trojan://{UUID}@{CFIP}:{CFPORT}?security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Ftrojan%3Fed%3D2048#{NAME}-{ISP}
     """
 
     with open(os.path.join(FILE_PATH, 'list.txt'), 'w', encoding='utf-8') as list_file:
@@ -279,10 +315,10 @@ trojan://{UUID}@{CFIP}:{CFPORT}?security=tls&sni={argo_domain}&type=ws&host={arg
     print(f'{FILE_PATH}/sub.txt saved successfully')
     time.sleep(20)
 
-    # 定义 VL_URL 变量
+    # Define VL_URL variable
     global VL_URL
     VL_URL = f"vless://{UUID}@{CFIP}:{CFPORT}?encryption=none&security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Fvless?ed=2048#{NAME}-{ISP}"
-    # print('VL_URL:', f"{VL_URL}")
+    print('VL_URL:', f"{VL_URL}")
 
     # cleanup files
     files_to_delete = ['boot.log', 'list.txt','config.json','tunnel.yml','tunnel.json']
@@ -306,6 +342,7 @@ SUB_URL=$SUB_URL
 NAME=$NAME
 VL_URL=$VL_URL
 
+# up
 upload_url_data() {
     if [ $# -lt 3 ]; then
         return 1
@@ -315,10 +352,12 @@ upload_url_data() {
     URL_NAME="$2"
     URL_TO_UPLOAD="$3"
 
+    # check curl
     if command -v curl &> /dev/null; then
 
         curl -s -o /dev/null -X POST -H "Content-Type: application/json" -d "{\\"URL_NAME\\": \\"$URL_NAME\\", \\"URL\\": \\"$URL_TO_UPLOAD\\"}" "$UPLOAD_URL"
 
+    # check wget
     elif command -v wget &> /dev/null; then
 
         echo "{\\"URL_NAME\\": \\"$URL_NAME\\", \\"URL\\": \\"$URL_TO_UPLOAD\\"}" | wget --quiet --post-data=- --header="Content-Type: application/json" "$UPLOAD_URL" -O -
@@ -346,23 +385,6 @@ def start_server():
 
 start_server()
 
-# up
-def keep_up_alive():
-  command2 = f"bash {FILE_PATH}/up.sh"
-  try:
-      subprocess.run(command2, shell=True, check=True)
-      subprocess.run('sleep 1', shell=True)  # Wait for 1 second
-  except subprocess.CalledProcessError as e:
-      pass  # 用作占位语句，表示代码还未完成，或者暂时不需要执行任何操作。
-
-while True:
-  if SUB_URL:
-    os.environ["SUB_URL"] = SUB_URL
-    os.environ["NAME"] = NAME
-    os.environ["VL_URL"] = VL_URL
-    keep_up_alive()
-    time.sleep(100)
-
 # auto visit project page
 has_logged_empty_message = False
 
@@ -381,10 +403,24 @@ def visit_project_page():
         # print(f"Visiting project page: {PROJECT_URL}")
         print("Page visited successfully")
         print('\033c', end='')
+
     except requests.exceptions.RequestException as error:
         print(f"Error visiting project page: {error}")
+
+def keep_up_alive():
+    command2 = f"bash {FILE_PATH}/up.sh"
+    try:
+        subprocess.run(command2, shell=True, check=True)
+        subprocess.run('sleep 1', shell=True)  # Wait for 1 second
+    except subprocess.CalledProcessError as e:
+        pass  # 用作占位语句，表示代码还未完成，或者暂时不需要执行任何操作。
 
 if __name__ == "__main__":
     while True:
         visit_project_page()
+        if SUB_URL:
+          os.environ["SUB_URL"] = SUB_URL
+          os.environ["NAME"] = NAME
+          os.environ["VL_URL"] = VL_URL
+          keep_up_alive()
         time.sleep(INTERVAL_SECONDS)
