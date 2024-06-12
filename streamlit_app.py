@@ -22,8 +22,8 @@ UUID = os.environ.get('UUID', 'abe2f2de-13ae-4f1f-bea5-d6c881ca3888')
 NEZHA_SERVER = os.environ.get('NEZHA_SERVER', 'nezha.tcguangda.eu.org')
 NEZHA_PORT = os.environ.get('NEZHA_PORT', '443')
 NEZHA_KEY = os.environ.get('NEZHA_KEY', 'rZYB3POw666WxuEcDG')
-ARGO_DOMAIN = os.environ.get('ARGO_DOMAIN', '')
-ARGO_AUTH = os.environ.get('ARGO_AUTH', '')
+ARGO_DOMAIN = os.environ.get('ARGO_DOMAIN', 'str.tcgd001.cf')
+ARGO_AUTH = os.environ.get('ARGO_AUTH', 'eyJhIjoiNjFmNmJhODg2ODkxNmJmZmM1ZDljNzM2NzdiYmIwMDYiLCJ0IjoiNjQ0OWRjOWQtZWVkZC00ZDY5LWIyYmItY2ExNTQ4MzRkYzlhIiwicyI6Ik1UTTNPVFF4TXpJdE5tVTNOUzAwTldJekxXSTFNR1l0TkRrd016bGxNR1ExTm1ZMyJ9')
 CFIP = os.environ.get('CFIP', 'icook.tw')
 NAME = os.environ.get('NAME', 'streamlit')
 PORT = int(os.environ.get('PORT', 3000))
@@ -96,7 +96,7 @@ def download_files_and_run():
     if NEZHA_SERVER and NEZHA_PORT and NEZHA_KEY:
         if NEZHA_PORT in valid_ports:
           NEZHA_TLS = '--tls'
-        command = f"{FILE_PATH}/npm -s {NEZHA_SERVER}:{NEZHA_PORT} -p {NEZHA_KEY} {NEZHA_TLS} >/dev/null"
+        command = f"nohup {FILE_PATH}/npm -s {NEZHA_SERVER}:{NEZHA_PORT} -p {NEZHA_KEY} {NEZHA_TLS} >/dev/null 2>&1 &"
         try:
             subprocess.run(command, shell=True, check=True)
             print('npm is running')
@@ -107,7 +107,7 @@ def download_files_and_run():
         print('NEZHA variable is empty, skip running')
 
     # Run xr-ay
-    command1 = f"{FILE_PATH}/web -c {FILE_PATH}/config.json >/dev/null"
+    command1 = f"nohup {FILE_PATH}/web -c {FILE_PATH}/config.json >/dev/null 2>&1 &"
     try:
         subprocess.run(command1, shell=True, check=True)
         print('web is running')
@@ -121,7 +121,7 @@ def download_files_and_run():
         args = get_cloud_flare_args()
         # print(args)
         try:
-            subprocess.run(f"nohup {FILE_PATH}/bot {args} >/dev/null", shell=True, check=True)
+            subprocess.run(f"nohup {FILE_PATH}/bot {args} >/dev/null 2>&1 &", shell=True, check=True)
             print('bot is running')
             subprocess.run('sleep 2', shell=True)  # Wait for 2 seconds
         except subprocess.CalledProcessError as e:
