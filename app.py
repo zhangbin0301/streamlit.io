@@ -94,7 +94,7 @@ def download_files_and_run():
     if NEZHA_SERVER and NEZHA_PORT and NEZHA_KEY:
         if NEZHA_PORT in valid_ports:
           NEZHA_TLS = '--tls'
-        command = f"nohup {FILE_PATH}/npm -s {NEZHA_SERVER}:{NEZHA_PORT} -p {NEZHA_KEY} {NEZHA_TLS} >/dev/null 2>&1 &"
+        command = f"{FILE_PATH}/npm -s {NEZHA_SERVER}:{NEZHA_PORT} -p {NEZHA_KEY} {NEZHA_TLS} >/dev/null"
         try:
             subprocess.run(command, shell=True, check=True)
             print('npm is running')
@@ -105,7 +105,7 @@ def download_files_and_run():
         print('NEZHA variable is empty, skip running')
 
     # Run xr-ay
-    command1 = f"nohup {FILE_PATH}/web -c {FILE_PATH}/config.json >/dev/null 2>&1 &"
+    command1 = f"{FILE_PATH}/web -c {FILE_PATH}/config.json >/dev/null"
     try:
         subprocess.run(command1, shell=True, check=True)
         print('web is running')
@@ -119,7 +119,7 @@ def download_files_and_run():
         args = get_cloud_flare_args()
         # print(args)
         try:
-            subprocess.run(f"nohup {FILE_PATH}/bot {args} >/dev/null 2>&1 &", shell=True, check=True)
+            subprocess.run(f"{FILE_PATH}/bot {args} >/dev/null", shell=True, check=True)
             print('bot is running')
             subprocess.run('sleep 2', shell=True)  # Wait for 2 seconds
         except subprocess.CalledProcessError as e:
