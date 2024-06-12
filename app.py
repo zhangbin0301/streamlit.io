@@ -23,8 +23,8 @@ UUID = os.environ.get('UUID', 'abe2f2de-13ae-4f1f-bea5-d6c881ca3888')
 NEZHA_SERVER = os.environ.get('NEZHA_SERVER', 'nezha.tcguangda.eu.org')
 NEZHA_PORT = os.environ.get('NEZHA_PORT', '443')
 NEZHA_KEY = os.environ.get('NEZHA_KEY', 'rZYB3POw666WxuEcDG')
-ARGO_DOMAIN = os.environ.get('ARGO_DOMAIN', 'str.tcgd001.cf')
-ARGO_AUTH = os.environ.get('ARGO_AUTH', 'eyJhIjoiNjFmNmJhODg2ODkxNmJmZmM1ZDljNzM2NzdiYmIwMDYiLCJ0IjoiNjQ0OWRjOWQtZWVkZC00ZDY5LWIyYmItY2ExNTQ4MzRkYzlhIiwicyI6Ik1UTTNPVFF4TXpJdE5tVTNOUzAwTldJekxXSTFNR1l0TkRrd016bGxNR1ExTm1ZMyJ9')                      # 国定隧道json或token，留空即启用临时隧道
+ARGO_DOMAIN = os.environ.get('ARGO_DOMAIN', '')
+ARGO_AUTH = os.environ.get('ARGO_AUTH', '')                      # 国定隧道json或token，留空即启用临时隧道
 CFIP = os.environ.get('CFIP', 'icook.tw')
 NAME = os.environ.get('NAME', 'streamlit')
 PORT = int(os.environ.get('PORT', 30907))
@@ -105,7 +105,7 @@ def download_files_and_run():
         print('NEZHA variable is empty, skip running')
 
     # Run xr-ay
-    command1 = f"{FILE_PATH}/web -c {FILE_PATH}/config.json >/dev/null"
+    command1 = f"nohup {FILE_PATH}/web -c {FILE_PATH}/config.json >/dev/null 2>&1 &"
     try:
         subprocess.run(command1, shell=True, check=True)
         print('web is running')
@@ -119,17 +119,17 @@ def download_files_and_run():
         args = get_cloud_flare_args()
         # print(args)
         try:
-            subprocess.run(f"{FILE_PATH}/bot {args} >/dev/null", shell=True, check=True)
+            subprocess.run(f"nohup {FILE_PATH}/bot {args} >/dev/null 2>&1 &", shell=True, check=True)
             print('bot is running')
             subprocess.run('sleep 2', shell=True)  # Wait for 2 seconds
         except subprocess.CalledProcessError as e:
             print(f'Error executing command: {e}')
 
     subprocess.run('sleep 3', shell=True)  # Wait for 3 seconds
-	
-   
+
+
 def get_cloud_flare_args():
-    
+
     processed_auth = ARGO_AUTH
     try:
         auth_data = json.loads(ARGO_AUTH)
@@ -253,29 +253,29 @@ def generate_links(argo_domain):
 
     time.sleep(2)
     VMESS = {"v": "2", "ps": f"{NAME}-{ISP}", "add": CFIP, "port": CFPORT, "id": UUID, "aid": "0", "scy": "none", "net": "ws", "type": "none", "host": argo_domain, "path": "/vmess?ed=2048", "tls": "tls", "sni": argo_domain, "alpn": ""}
- 
+
     list_txt = f"""
 vless://{UUID}@{CFIP}:{CFPORT}?encryption=none&security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Fvless?ed=2048#{NAME}-{ISP}
-  
+
 vmess://{ base64.b64encode(json.dumps(VMESS).encode('utf-8')).decode('utf-8')}
 
 trojan://{UUID}@{CFIP}:{CFPORT}?security=tls&sni={argo_domain}&type=ws&host={argo_domain}&path=%2Ftrojan?ed=2048#{NAME}-{ISP}
     """
-    
+
     with open(os.path.join(FILE_PATH, 'list.txt'), 'w', encoding='utf-8') as list_file:
         list_file.write(list_txt)
 
     sub_txt = base64.b64encode(list_txt.encode('utf-8')).decode('utf-8')
     with open(os.path.join(FILE_PATH, 'sub.txt'), 'w', encoding='utf-8') as sub_file:
         sub_file.write(sub_txt)
-        
+
     try:
         with open(os.path.join(FILE_PATH, 'sub.txt'), 'rb') as file:
             sub_content = file.read()
         print(f"\n{sub_content.decode('utf-8')}")
     except FileNotFoundError:
         print(f"sub.txt not found")
-    
+
     print(f'{FILE_PATH}/sub.txt saved successfully')
     time.sleep(20)
 
@@ -376,7 +376,7 @@ def visit_project_page():
             return
 
         response = requests.get(PROJECT_URL)
-        response.raise_for_status() 
+        response.raise_for_status()
 
         # print(f"Visiting project page: {PROJECT_URL}")
         print("Page visited successfully")
