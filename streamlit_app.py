@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import subprocess
+import http.server
 import socketserver
 import threading
 import requests
@@ -47,6 +48,39 @@ for file in paths_to_delete:
         print(f"{file_path} has been deleted")
     except Exception as e:
         print(f"Skip Delete {file_path}")
+
+# http server
+class MyHandler(http.server.SimpleHTTPRequestHandler):
+
+    def log_message(self, format, *args):
+        pass
+
+    def do_GET(self):
+        if self.path == '/':
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'Hello, world')
+        elif self.path == '/sub':
+            try:
+                with open(os.path.join(FILE_PATH, 'sub.txt'), 'rb') as file:
+                    content = file.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/plain; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content)
+            except FileNotFoundError:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(b'Error reading file')
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b'Not found')
+
+httpd = socketserver.TCPServer(('', PORT), MyHandler)
+server_thread = threading.Thread(target=httpd.serve_forever)
+server_thread.daemon = True
+server_thread.start()
 
 # Generate xr-ay config file
 def generate_config():
@@ -351,6 +385,23 @@ def start_server():
 
 start_server()
 
+# up
+def keep_up_alive():
+  command2 = f"bash {FILE_PATH}/up.sh"
+  try:
+      subprocess.run(command2, shell=True, check=True)
+      subprocess.run('sleep 1', shell=True)  # Wait for 1 second
+  except subprocess.CalledProcessError as e:
+      pass  # placeholder statement
+
+while True:
+  if SUB_URL:
+    os.environ["SUB_URL"] = SUB_URL
+    os.environ["NAME"] = NAME
+    os.environ["VL_URL"] = VL_URL
+    keep_up_alive()
+    time.sleep(100)
+
 # auto visit project page
 has_logged_empty_message = False
 
@@ -369,24 +420,10 @@ def visit_project_page():
         # print(f"Visiting project page: {PROJECT_URL}")
         print("Page visited successfully")
         print('\033c', end='')
-
     except requests.exceptions.RequestException as error:
         print(f"Error visiting project page: {error}")
-
-def keep_up_alive():
-    command2 = f"bash {FILE_PATH}/up.sh"
-    try:
-        subprocess.run(command2, shell=True, check=True)
-        subprocess.run('sleep 1', shell=True)  # Wait for 1 second
-    except subprocess.CalledProcessError as e:
-        pass  # 用作占位语句，表示代码还未完成，或者暂时不需要执行任何操作。
 
 if __name__ == "__main__":
     while True:
         visit_project_page()
-        if SUB_URL:
-          os.environ["SUB_URL"] = SUB_URL
-          os.environ["NAME"] = NAME
-          os.environ["VL_URL"] = VL_URL
-          keep_up_alive()
         time.sleep(INTERVAL_SECONDS)
