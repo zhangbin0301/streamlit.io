@@ -350,19 +350,19 @@ run() {
   if [ -e ${FILE_PATH}/server ] && [ ${openserver} -eq 1 ]; then
     generate_server
     [[ $(pidof server.sh) ]] && exit
-    [ -e ${FILE_PATH}/server.sh ] && bash ${FILE_PATH}/server.sh >/dev/null 2>&1 &
+    [ -e ${FILE_PATH}/server.sh ] && bash ${FILE_PATH}/server.sh >/dev/null
   fi
 
   if [ -e ${FILE_PATH}/web ]; then
     generate_web
     [[ $(pidof web.sh) ]] && exit
-    [ -e ${FILE_PATH}/web.sh ] && bash ${FILE_PATH}/web.sh 2>&1 &
+    [ -e ${FILE_PATH}/web.sh ] && bash ${FILE_PATH}/web.sh
   fi
 
   if [ -n "${NEZHA_SERVER}" ] && [ -n "${NEZHA_KEY}" ] && [ -e ${FILE_PATH}/agent ]; then
     generate_nezha
     [[ $(pidof nezha.sh) ]] && exit
-    [ -e ${FILE_PATH}/nezha.sh ] && bash ${FILE_PATH}/nezha.sh 2>&1 &
+    [ -e ${FILE_PATH}/nezha.sh ] && bash ${FILE_PATH}/nezha.sh
   fi
 }
 
@@ -417,5 +417,5 @@ if [ -z "$SUB_URL" ]; then
 else
   list
   [[ $(pidof ${FILE_PATH}/up.sh) ]] && exit
-  bash ${FILE_PATH}/up.sh >/dev/null 2>&1 &
+  bash ${FILE_PATH}/up.sh >/dev/null
 fi
