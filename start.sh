@@ -8,7 +8,7 @@ export VMESS_WSPATH=${VMESS_WSPATH:-'startvm'}
 export VLESS_WSPATH=${VLESS_WSPATH:-'startvl'}
 export CF_IP=${CF_IP:-'icook.tw'}
 export SUB_NAME=${SUB_NAME:-'streamlit'}
-export FILE_PATH=${FILE_PATH:-'./.npm'}
+export FILE_PATH=${FILE_PATH:-'./.tmp'}
 
 # 当值大于1时用argo,当值为其他值时不用argo，,默认为1
 export openserver=${openserver:-'1'}
@@ -33,7 +33,7 @@ if [ ! -d "$FILE_PATH" ]; then
 fi
 
 cleanup_files() {
-  rm -rf ${FILE_PATH}/boot.log ${FILE_PATH}/out.json ${FILE_PATH}/*.sh
+  rm -rf ${FILE_PATH}/boot.log ${FILE_PATH}/out.json ${FILE_PATH}/*.txt ${FILE_PATH}/*.sh
 }
 cleanup_files
 
@@ -305,12 +305,10 @@ generate_server() {
 
 check_run() {
   [[ \$(pidof server) ]] && echo "server is runing!" && exit
+  ${FILE_PATH}/server $args >/dev/null 2>&1 &
 }
 
-${FILE_PATH}/server $args >/dev/null
-
 check_run
-wait
 EOF
 }
 
@@ -320,12 +318,10 @@ generate_web() {
 
 check_run() {
   [[ \$(pidof web) ]] && echo "web is runing!" && exit
+  ${FILE_PATH}/web run -c ${FILE_PATH}/out.json >/dev/null 2>&1 &
 }
 
-${FILE_PATH}/web run -c ${FILE_PATH}/out.json
-
 check_run
-wait
 EOF
 }
 
@@ -335,12 +331,10 @@ generate_nezha() {
 
 check_run() {
   [[ \$(pidof agent) ]] && echo "nez is runing" && exit
+  ${FILE_PATH}/agent -s ${NEZHA_SERVER}:${NEZHA_PORT} -p ${NEZHA_KEY} ${NEZHA_TLS} >/dev/null 2>&1 &
 }
 
-${FILE_PATH}/agent -s ${NEZHA_SERVER}:${NEZHA_PORT} -p ${NEZHA_KEY} ${NEZHA_TLS}
-
 check_run
-wait
 EOF
 }
 
@@ -349,19 +343,19 @@ run() {
   # openserver等于1
   if [ -e ${FILE_PATH}/server ] && [ ${openserver} -eq 1 ]; then
     generate_server
-    [[ $(pidof server.sh) ]] && exit
+    [[ $(pidof server) ]] && exit
     [ -e ${FILE_PATH}/server.sh ] && bash ${FILE_PATH}/server.sh
   fi
 
   if [ -e ${FILE_PATH}/web ]; then
     generate_web
-    [[ $(pidof web.sh) ]] && exit
+    [[ $(pidof web) ]] && exit
     [ -e ${FILE_PATH}/web.sh ] && bash ${FILE_PATH}/web.sh
   fi
 
   if [ -n "${NEZHA_SERVER}" ] && [ -n "${NEZHA_KEY}" ] && [ -e ${FILE_PATH}/agent ]; then
     generate_nezha
-    [[ $(pidof nezha.sh) ]] && exit
+    [[ $(pidof agent) ]] && exit
     [ -e ${FILE_PATH}/nezha.sh ] && bash ${FILE_PATH}/nezha.sh
   fi
 }
@@ -388,7 +382,7 @@ list() {
 
 VMESS="{ \"v\": \"2\", \"ps\": \"vmess-${country_abbreviation}-${SUB_NAME}\", \"add\": \"${CF_IP}\", \"port\": \"${CFPORT}\", \"id\": \"${UUID}\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"${ARGO_DOMAIN}\", \"path\": \"/${VMESS_WSPATH}?ed=2048\", \"tls\": \"tls\", \"sni\": \"${ARGO_DOMAIN}\", \"alpn\": \"\" }"
 
-  cat > ${FILE_PATH}/list.txt <<ABC
+  cat > ${FILE_PATH}/list.txt << ABC
 ***************************************************
 
       IP : ${server_ip}     Country： ${country_abbreviation}
@@ -401,14 +395,6 @@ vless://${UUID}@${CF_IP}:${CFPORT}?host=${ARGO_DOMAIN}&path=%2F${VLESS_WSPATH}%3
 
 ***************************************************
 ABC
-
-  cat > ${FILE_PATH}/encode.txt <<EOF
-vmess://$(echo "$VMESS" | base64 | tr -d '\n')
-vless://${UUID}@${CF_IP}:${CFPORT}?host=${ARGO_DOMAIN}&path=%2F${VLESS_WSPATH}%3Fed%3D2048&type=ws&encryption=none&security=tls&sni=${ARGO_DOMAIN}#vless-${country_abbreviation}-${SUB_NAME}
-EOF
-
-  base64 ${FILE_PATH}/encode.txt | tr -d '\n' > ${FILE_PATH}/sub.txt
-  rm ${FILE_PATH}/encode.txt
 }
 
 # up
@@ -417,5 +403,5 @@ if [ -z "$SUB_URL" ]; then
 else
   list
   [[ $(pidof ${FILE_PATH}/up.sh) ]] && exit
-  bash ${FILE_PATH}/up.sh >/dev/null
+  bash ${FILE_PATH}/up.sh >/dev/null 2>&1 &
 fi
