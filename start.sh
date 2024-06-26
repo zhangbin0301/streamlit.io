@@ -7,6 +7,7 @@ export UUID=${UUID:-'7160b696-dd5e-42e3-a024-145e92cec916'}
 export VMESS_WSPATH=${VMESS_WSPATH:-'startvm'}
 export VLESS_WSPATH=${VLESS_WSPATH:-'startvl'}
 export CF_IP=${CF_IP:-'icook.tw'}
+export MY_DOMAIN=${MY_DOMAIN:-''}
 export SUB_NAME=${SUB_NAME:-'streamlit'}
 export FILE_PATH=${FILE_PATH:-'./.tmp'}
 
@@ -371,13 +372,14 @@ export country_abbreviation=$(curl -s https://speed.cloudflare.com/meta | tr ','
 
 # list
 list() {
-  if [ -z "$ARGO_AUTH" ] && [ -z "$ARGO_DOMAIN" ]; then
+  if [ -z "$ARGO_AUTH" ] && [ -z "$ARGO_DOMAIN" ] && [ -e ${FILE_PATH}/server ]; then
     [ -s ${FILE_PATH}/boot.log ] && export ARGO_DOMAIN=$(cat ${FILE_PATH}/boot.log | grep -o "info.*https://.*trycloudflare.com" | sed "s@.*https://@@g" | tail -n 1)
   fi
 
   # openserver不等于1
   if [ ${openserver} -ne 1 ]; then
     echo "Please set up the cf reverse proxy domain name!"
+    export ARGO_DOMAIN="$MY_DOMAIN"
   fi
 
 VMESS="{ \"v\": \"2\", \"ps\": \"vmess-${country_abbreviation}-${SUB_NAME}\", \"add\": \"${CF_IP}\", \"port\": \"${CFPORT}\", \"id\": \"${UUID}\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"${ARGO_DOMAIN}\", \"path\": \"/${VMESS_WSPATH}?ed=2048\", \"tls\": \"tls\", \"sni\": \"${ARGO_DOMAIN}\", \"alpn\": \"\" }"
