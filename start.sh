@@ -16,15 +16,9 @@ export openserver=${openserver:-'1'}
 
 export SUB_URL=${SUB_URL:-'https://myjyup.shiguangda.nom.za/upload-a4aa34be-4373-4fdb-bff7-0a9c23405dac'}
 
-NEZHA_SERVER=${NEZHA_SERVER:-'nezha.tcguangda.eu.org'}
-NEZHA_KEY=${NEZHA_KEY:-'rZYB3POw666WxuEcDG'}
-NEZHA_PORT=${NEZHA_PORT:-'443'}
-tlsPorts=("443" "8443" "2096" "2087" "2083" "2053")
-if [[ " ${tlsPorts[@]} " =~ " ${NEZHA_PORT} " ]]; then
-  NEZHA_TLS="--tls"
-else
-  NEZHA_TLS=""
-fi
+export NEZHA_SERVER=${NEZHA_SERVER:-'nezha.tcguangda.eu.org'}
+export NEZHA_KEY=${NEZHA_KEY:-'rZYB3POw666WxuEcDG'}
+export NEZHA_PORT=${NEZHA_PORT:-'443'}
 
 # export ARGO_DOMAIN=${ARGO_DOMAIN:-'cs.drst.cloudns.org'}
 # export ARGO_AUTH=${ARGO_AUTH:-'eyJhIjoiY2Y4OWNmMDcwOGEzZjRlMjY0ZmJmNDFhNDdkMTdjYTMiLCJ0IjoiMmIyZjE3ZDQtMjc1MS00YzZmLWJlODQtY2VlOTZjNDkzNWRiIiwicyI6Ik5USTJNbVU1TnpndE5HVTFNaTAwTWpaaUxXRTJOMk10WVRkaVl6SXhNell6TlRGbSJ9'}
@@ -315,6 +309,12 @@ run() {
 
   if [ -n "${NEZHA_SERVER}" ] && [ -n "${NEZHA_KEY}" ] && [ -e ${FILE_PATH}/agent ]; then
     [[ $(pidof agent) ]] && exit
+    tlsPorts=("443" "8443" "2096" "2087" "2083" "2053")
+    if [[ " ${tlsPorts[@]} " =~ " ${NEZHA_PORT} " ]]; then
+      NEZHA_TLS="--tls"
+    else
+      NEZHA_TLS=""
+    fi
     ${FILE_PATH}/agent -s ${NEZHA_SERVER}:${NEZHA_PORT} -p ${NEZHA_KEY} ${NEZHA_TLS} >/dev/null 2>&1 &
   fi
 }
