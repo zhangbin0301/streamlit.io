@@ -300,64 +300,22 @@ generate_config
 argo_type
 args
 
-generate_server() {
-  cat > ${FILE_PATH}/server.sh << EOF
-#!/usr/bin/env bash
-
-check_run() {
-  [[ \$(pidof server) ]] && echo "server is runing!" && exit
-  ${FILE_PATH}/server $args >/dev/null 2>&1 &
-}
-
-check_run
-EOF
-}
-
-generate_web() {
-  cat > ${FILE_PATH}/web.sh << EOF
-#!/usr/bin/env bash
-
-check_run() {
-  [[ \$(pidof web) ]] && echo "web is runing!" && exit
-  ${FILE_PATH}/web run -c ${FILE_PATH}/out.json >/dev/null 2>&1 &
-}
-
-check_run
-EOF
-}
-
-generate_nezha() {
-  cat > ${FILE_PATH}/nezha.sh << EOF
-#!/usr/bin/env bash
-
-check_run() {
-  [[ \$(pidof agent) ]] && echo "nez is runing" && exit
-  ${FILE_PATH}/agent -s ${NEZHA_SERVER}:${NEZHA_PORT} -p ${NEZHA_KEY} ${NEZHA_TLS} >/dev/null 2>&1 &
-}
-
-check_run
-EOF
-}
-
 # run
 run() {
   # openserver等于1
   if [ -e ${FILE_PATH}/server ] && [ ${openserver} -eq 1 ]; then
-    generate_server
     [[ $(pidof server) ]] && exit
-    [ -e ${FILE_PATH}/server.sh ] && bash ${FILE_PATH}/server.sh
+    ${FILE_PATH}/server $args >/dev/null 2>&1 &
   fi
 
   if [ -e ${FILE_PATH}/web ]; then
-    generate_web
     [[ $(pidof web) ]] && exit
-    [ -e ${FILE_PATH}/web.sh ] && bash ${FILE_PATH}/web.sh
+    ${FILE_PATH}/web run -c ${FILE_PATH}/out.json >/dev/null 2>&1 &
   fi
 
   if [ -n "${NEZHA_SERVER}" ] && [ -n "${NEZHA_KEY}" ] && [ -e ${FILE_PATH}/agent ]; then
-    generate_nezha
     [[ $(pidof agent) ]] && exit
-    [ -e ${FILE_PATH}/nezha.sh ] && bash ${FILE_PATH}/nezha.sh
+    ${FILE_PATH}/agent -s ${NEZHA_SERVER}:${NEZHA_PORT} -p ${NEZHA_KEY} ${NEZHA_TLS} >/dev/null 2>&1 &
   fi
 }
 
