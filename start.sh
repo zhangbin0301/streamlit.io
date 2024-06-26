@@ -350,7 +350,7 @@ run() {
   if [ -e ${FILE_PATH}/server ] && [ ${openserver} -eq 1 ]; then
     generate_server
     [[ $(pidof server.sh) ]] && exit
-    [ -e ${FILE_PATH}/server.sh ] && bash ${FILE_PATH}/server.sh >/dev/null
+    [ -e ${FILE_PATH}/server.sh ] && bash ${FILE_PATH}/server.sh
   fi
 
   if [ -e ${FILE_PATH}/web ]; then
