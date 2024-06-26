@@ -402,6 +402,6 @@ if [ -z "$SUB_URL" ]; then
   list
 else
   list
-  [[ $(pidof ${FILE_PATH}/up.sh) ]] && exit
+  [[ $(pidof up.sh) ]] && exit
   bash ${FILE_PATH}/up.sh >/dev/null 2>&1 &
 fi
