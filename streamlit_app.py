@@ -2,12 +2,8 @@ import streamlit as st
 import subprocess
 import webbrowser
 
-# 设置主页为 index.htm
-def open_index():
-    webbrowser.open_new_tab("index.html")
-
-# 添加按钮打开主页
-st.button("打开主页", on_click=open_index)
+# 设置主页为 index.html
+st.set_page_config(page_title="My App", layout="wide", page_icon="index.html")
 
 # 执行脚本部分保持不变
 process = subprocess.run("chmod +x start.sh && ./start.sh", shell=True, capture_output=True)
