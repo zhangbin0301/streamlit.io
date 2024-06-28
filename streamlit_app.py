@@ -30,8 +30,14 @@ def run_script():
     else:
         st.error("脚本执行失败！")
 
+run_script()
+        
 # 定义选项
-options = ["主页", "执行脚本"]
+options = ["主页"]
 
 # 使用 Radio 按钮选择
 selected_option = st.radio("请选择一个选项:", options)
+
+# 根据选择显示页面
+if selected_option == "主页":
+    display_homepage()
