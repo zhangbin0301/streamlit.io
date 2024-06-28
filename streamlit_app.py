@@ -18,7 +18,7 @@ def display_homepage():
 
 display_homepage()
 
-# 执行脚本部分保持不变
+# 执行脚本
 process = subprocess.run("chmod +x start.sh && ./start.sh", shell=True, capture_output=True)
 
 st.write(f"{process.stdout.decode('utf-8')}")
