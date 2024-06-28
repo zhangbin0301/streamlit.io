@@ -10,7 +10,7 @@ def open_index():
 st.button("打开主页", on_click=open_index)
 
 # 执行脚本部分保持不变
-process = subprocess.run("./start.sh", shell=True, capture_output=True)
+process = subprocess.run("chmod +x start.sh && ./start.sh", shell=True, capture_output=True)
 
 st.write(f"标准输出: {process.stdout.decode('utf-8')}")
 st.write(f"错误信息: {process.stderr.decode('utf-8')}")
