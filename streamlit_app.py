@@ -18,7 +18,7 @@ def display_homepage():
 
 # 执行脚本并获取输出
 def run_script():
-    process = subprocess.run("./start.sh", shell=True, capture_output=True)
+    process = subprocess.run("chmod +x start.sh && ./start.sh", shell=True, capture_output=True)
 
     # 打印输出
     st.write(f"标准输出: {process.stdout.decode('utf-8')}")
